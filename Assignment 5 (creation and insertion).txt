@@ -1,0 +1,364 @@
+Dr. Mauro, you may find it easier to grade the information at the bottom of my assignment.
+
+Also, I understand that I could have also just used
+SET search_path TO internal;
+I just wanted to show complete understanding of how to do the other syntax - even though it is really easy.
+
+Database Creation
+__________________
+create database BigCompany;
+
+
+
+Schema Creation
+__________________
+create schema if not exists internal;
+
+
+
+
+Table Creation
+__________________
+create table internal.regions(
+region_id integer,
+region_name varchar(25),
+primary key (region_id)
+);
+
+create table internal.countries(
+country_id char(2),
+country_name varchar(40),
+region_id integer,
+primary key (country_id)
+);
+
+create table internal.locations(
+location_id integer,
+street_address varchar(25),
+postal_code varchar(12),
+city varchar(30),
+state_province varchar(12),
+country_id char(2),
+primary key (location_id)
+);
+
+create table internal.departments(
+department_id integer,
+department_name varchar(30),
+manager_id integer,
+location_id integer,
+primary key (department_id)
+);
+
+create table internal.job_history(
+employee_id integer,
+start_date date,
+end_date date,
+job_id varchar(10),
+department_id integer,
+primary key(employee_id, start_date)
+);
+
+create table internal.jobs(
+job_id varchar(10),
+job_title varchar(25),
+min_salary integer,
+max_salary integer,
+primary key (job_id)
+);
+
+create table internal.job_grades(
+grade_level varchar(2),
+lowest_sal integer,
+highest_sal integer,
+primary key (grade_level)
+);
+
+create table internal.employees(
+employee_id integer,
+first_name varchar(20) not null,
+last_name varchar(25) not null,
+email varchar(25) unique not null,
+phone_number varchar(20),
+hire_date date,
+job_id varchar(10),
+salary integer,
+commission_pct integer,
+manager_id integer,
+department_id integer,
+primary key (employee_id)
+);
+
+
+
+Constraint Creation (really just foreign keys since primaries were done already)
+READ ME: THESE ARE WHAT I USED FOR "Provide 1 example of table alteration after the creation (e.g. to specify a constraint, to change a field)"
+__________________
+ALTER TABLE internal.countries 
+ADD CONSTRAINT regions_countries_fkey FOREIGN KEY (region_id) REFERENCES internal.regions(region_id)
+ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE internal.locations 
+ADD CONSTRAINT countries_locations_fkey FOREIGN KEY (country_id) REFERENCES internal.countries(country_id)
+ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE internal.departments 
+ADD CONSTRAINT locations_departments_fkey FOREIGN KEY (location_id) REFERENCES internal.locations(location_id)
+ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE internal.job_history 
+ADD CONSTRAINT departments_jobhistory_fkey FOREIGN KEY (department_id) REFERENCES internal.departments(department_id)
+ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE internal.employees 
+ADD CONSTRAINT departments_employees_fkey FOREIGN KEY (department_id) REFERENCES internal.departments(department_id)
+ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE internal.employees
+ADD CONSTRAINT jobhistory_employees_fkey FOREIGN KEY (employee_id) REFERENCES internal.job_history(employee_id)
+ON DELETE RESTRICT ON UPDATE CASCADE; --this relationship feels funny to me...not sure why
+
+ALTER TABLE internal.employees
+ADD CONSTRAINT jobs_employees_fkey FOREIGN KEY (job_id) REFERENCES internal.jobs(job_id)
+ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE internal.job_history
+ADD CONSTRAINT jobs_jobhistory_fkey FOREIGN KEY (job_id) REFERENCES internal.jobs(job_id)
+ON DELETE RESTRICT ON UPDATE CASCADE;
+
+
+
+Inserting some data
+__________________________
+insert into internal.regions (region_id, region_name)
+values(1, 'Western'),
+(2, 'Eastern');
+
+insert into internal.countries (country_id, country_name, region_id)
+values(1, 'United States', 1),
+(2, 'Italy', 2);
+
+insert into internal.locations (location_id, street_address, postal_code, city, state_province, country_id)
+values(1, '1 John Marshall Drive', 25755, 'Huntington', 'WV', 1),
+(2, '50 Mauro Way', 95021, 'Aci Castello', 'CT', 2);
+
+insert into internal.departments (department_id, department_name, manager_id, location_id)
+values(1, 'First Department of Finance', 11, 1),
+(2, 'Second Department of Computing', 22, 2);
+
+insert into internal.jobs (job_id, job_title, min_salary, max_salary)
+values(1, 'First Job', 10000, 100000),
+(2, 'Second Job', 20000, 200000);
+
+insert into internal.job_history (employee_id, start_date, end_date, job_id, department_id)
+values(100, '2020-01-01', NULL, 1, 1),
+(200, '2020-01-01', '2020-08-06', 2, 2);
+
+insert into internal.job_grades(grade_level, lowest_sal, highest_sal)
+values('A', 10000, 1000000),
+('B', 10000, 100000);
+
+insert into internal.employees (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id)
+values(100, 'First', 'Employee', 'firstemp@bigcompany.org', 5551111, '2020-01-01', 1, 50000, 25, 11, 1),
+(200, 'Second', 'Employee', 'secondemp@bigcompany.org', 5552222, '2020-08-06', 2, 40000, 50, 22, 2);
+
+
+Default Values
+_________________________
+ALTER TABLE internal.jobs ALTER COLUMN min_salary SET DEFAULT 0;
+ALTER TABLE internal.jobs ALTER COLUMN max_salary SET DEFAULT 1000000;
+ALTER TABLE internal.job_grades ALTER COLUMN lowest_sal SET DEFAULT 0;
+ALTER TABLE internal.job_grades ALTER COLUMN highest_sal SET DEFAULT 1000000;
+
+
+Example of UPDATE and DELETE
+_________________________________
+update internal.regions set region_name = 'Western Hemisphere' where region_id = 1;
+update internal.regions set region_name = 'Eastern Hemisphere' where region_id = 2;
+
+--I just inserted a value incorrectly into region for this, and then deleted it
+insert into internal.regions (region_id)
+values(34);
+
+delete from internal.regions where region_name IS NULL;
+
+
+POSTGRESQL GENERATED SQL PER EACH TABLE LISTED BELOW
+_______________________________________________________
+CREATE TABLE internal.countries
+(
+    country_id character(2) COLLATE pg_catalog."default" NOT NULL,
+    country_name character varying(40) COLLATE pg_catalog."default",
+    region_id integer,
+    CONSTRAINT countries_pkey PRIMARY KEY (country_id),
+    CONSTRAINT regions_countries_fkey FOREIGN KEY (region_id)
+        REFERENCES internal.regions (region_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE internal.countries
+    OWNER to postgres;
+
+
+
+
+
+CREATE TABLE internal.departments
+(
+    department_id integer NOT NULL,
+    department_name character varying(30) COLLATE pg_catalog."default",
+    manager_id integer,
+    location_id integer,
+    CONSTRAINT departments_pkey PRIMARY KEY (department_id),
+    CONSTRAINT locations_departments_fkey FOREIGN KEY (location_id)
+        REFERENCES internal.locations (location_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE internal.departments
+    OWNER to postgres;
+
+
+
+
+
+CREATE TABLE internal.employees
+(
+    employee_id integer NOT NULL,
+    first_name character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    last_name character varying(25) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(25) COLLATE pg_catalog."default" NOT NULL,
+    phone_number character varying(20) COLLATE pg_catalog."default",
+    hire_date date,
+    job_id character varying(10) COLLATE pg_catalog."default",
+    salary integer,
+    commission_pct integer,
+    manager_id integer,
+    department_id integer,
+    CONSTRAINT employees_pkey PRIMARY KEY (employee_id),
+    CONSTRAINT employees_email_key UNIQUE (email),
+    CONSTRAINT departments_employees_fkey FOREIGN KEY (department_id)
+        REFERENCES internal.departments (department_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT jobhistory_employees_fkey FOREIGN KEY (employee_id)
+        REFERENCES internal.job_history (employee_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT jobs_employees_fkey FOREIGN KEY (job_id)
+        REFERENCES internal.jobs (job_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE internal.employees
+    OWNER to postgres;
+
+
+
+
+
+CREATE TABLE internal.job_grades
+(
+    grade_level character varying(2) COLLATE pg_catalog."default" NOT NULL,
+    lowest_sal integer DEFAULT 0,
+    highest_sal integer DEFAULT 1000000,
+    CONSTRAINT job_grades_pkey PRIMARY KEY (grade_level)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE internal.job_grades
+    OWNER to postgres;
+
+
+
+
+CREATE TABLE internal.job_history
+(
+    employee_id integer NOT NULL,
+    start_date date,
+    end_date date,
+    job_id character varying(10) COLLATE pg_catalog."default",
+    department_id integer,
+    CONSTRAINT job_history_pkey PRIMARY KEY (employee_id, start_date),
+    CONSTRAINT departments_jobhistory_fkey FOREIGN KEY (department_id)
+        REFERENCES internal.departments (department_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT jobs_jobhistory_fkey FOREIGN KEY (job_id)
+        REFERENCES internal.jobs (job_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE internal.job_history
+    OWNER to postgres;
+
+
+
+CREATE TABLE internal.jobs
+(
+    job_id character varying(10) COLLATE pg_catalog."default" NOT NULL,
+    job_title character varying(25) COLLATE pg_catalog."default",
+    min_salary integer DEFAULT 0,
+    max_salary integer DEFAULT 1000000,
+    CONSTRAINT jobs_pkey PRIMARY KEY (job_id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE internal.jobs
+    OWNER to postgres;
+
+
+
+
+CREATE TABLE internal.locations
+(
+    location_id integer NOT NULL,
+    street_address character varying(25) COLLATE pg_catalog."default",
+    postal_code character varying(12) COLLATE pg_catalog."default",
+    city character varying(30) COLLATE pg_catalog."default",
+    state_province character varying(12) COLLATE pg_catalog."default",
+    country_id character(2) COLLATE pg_catalog."default",
+    CONSTRAINT locations_pkey PRIMARY KEY (location_id),
+    CONSTRAINT countries_locations_fkey FOREIGN KEY (country_id)
+        REFERENCES internal.countries (country_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE internal.locations
+    OWNER to postgres;
+
+
+
+
+
+CREATE TABLE internal.regions
+(
+    region_id integer NOT NULL,
+    region_name character varying(25) COLLATE pg_catalog."default",
+    CONSTRAINT regions_pkey PRIMARY KEY (region_id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE internal.regions
+    OWNER to postgres;
+
+
+

@@ -1,0 +1,54 @@
+Tyler Truman
+Dr. Mauro
+CIT 466
+
+1. select * from film;
+
+2.select last_name || ',' || first_name
+AS Name from customer
+order by last_name;
+
+3. select * from film where title like 
+'%Dinosaur%';
+
+4. select title, rental_rate,
+CASE
+when rental_rate > 2.99 then 'Expensive'
+when rental_rate < 2.99 then 'Cheap'
+END AS "Cost"
+from film; 
+--i have a lot of 2.99s here, but the question didn't want me to do anything with
+--them so i just left them as they were, but i know they are null in regards to cheap or expensive.
+--i know all i have to do is add an equal sign by one of them.
+
+5. select first_name, last_name
+from customer where first_name
+= 'John' or first_name = 'Mary';
+
+6. select rental_id, rental_date, return_date,
+return_date - rental_date as Length
+from rental
+order by rental_id
+;
+
+7. select * from rental where return_date IS NULL; 
+
+8. select country from country where country like
+'%ta%';
+
+9. select * from rental
+where rental_date between
+'01-May-2005' AND '03-August-2005'
+;
+
+10. WITH words as(
+Select title,
+LENGTH(description) - LENGTH(REPLACE(description,' ',''))+1
+as Total from film)
+select title, Total from words where Total > 8;
+--this one was rough for me, but here are my links I used troubleshooting the query, basically you have
+--to 'instantiate' the total column as its own column or it wouldnt work
+--https://www.sqlerror.de/db2_sql_error_-206_sqlstate_42703.html
+--https://stackoverflow.com/questions/42907758/how-to-create-a-table-using-with-clause-in-sql
+--in stackoverflow I used the upvoted answer, and within that, the large AS statement
+

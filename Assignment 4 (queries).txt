@@ -1,0 +1,74 @@
+1. 
+select first_name, last_name from customer c
+where exists
+(select 1 from rental r
+where c.customer_id = r.customer_id)
+order by first_name, last_name;
+--not sure if I need 1 here or not? line 3
+
+2. 
+select first_name, last_name 
+from customer
+except
+select distinct
+first_name, last_name
+from rental inner join customer using (customer_id)
+order by first_name, last_name;
+--I questioned why this returned nothing for the longest time...then I realized
+
+3. 
+SELECT rental_rate, name, count(name)
+FROM film f, film_category fc, category c
+WHERE f.film_id = fc.film_id
+AND fc.category_id = c.category_id
+group BY 
+grouping sets((rental_rate, name),
+(rental_rate),
+(name),
+()
+)
+order by name;
+-- https://www.postgresqltutorial.com/postgresql-grouping-sets/
+
+4.
+SELECT title, category_id, rental_rate
+FROM film as outer_film INNER JOIN film_category AS outer_film_category USING (film_id)
+WHERE rental_rate = (SELECT MAX(rental_rate)
+FROM film as inner_film
+INNER JOIN film_category AS inner_film_category USING(film_id) INNER JOIN category AS inner_category USING (category_id)
+WHERE outer_film_category.category_id=inner_category.category_id
+GROUP BY  inner_category.category_id
+ORDER BY inner_category.category_id)
+; --did this in class almost
+
+
+5. 
+WITH cte_avg_length AS (SELECT name, ROUND(AVG(length)) AS cte_avglength
+FROM category INNER JOIN film_category USING (category_id) INNER JOIN film USING (film_id)
+GROUP BY film_category.category_id, name
+)
+SELECT title, cte_avg_length
+FROM film INNER JOIN film_category USING (film_id) INNER JOIN category USING (category_id) INNER JOIN cte_avg_length USING (name)
+WHERE length = cte_avglength
+ORDER BY title
+; --very similar to what was done in class
+--i know this isn't the 'exact' length, but nothing would equal the average if it weren't formatted.
+
+6.
+Create view view_movie_language as(
+select title, length, l.name as Language
+from film inner join language l using (language_id)
+order by title
+);
+
+7.
+Create materialized view view_last_rental
+AS(
+select first_name, last_name, MAX(rental_date) as last_rental
+from rental 
+inner join customer using (customer_id)
+group by customer_id --I thought last name & first name had to be used here, but id works too
+order by first_name
+)
+WITH DATA;
+--select * from view_last_rental; works!
